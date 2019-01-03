@@ -1,5 +1,5 @@
-# COCKROACH BOILERPLATE WITH JWT PROJECT
-
+# BLESS PROJECT 
+##Provisioning to bless_neo
 
 ## Environment File
 
@@ -35,11 +35,6 @@ move env.local to .env
 Installing Requirements
 ``` bash
 pip install -r requirements.txt
-```
-
-run server
-``` bash
-python manage.py server
 ```
 
 ## Documentation
