@@ -7,10 +7,10 @@ import datetime
 from app.models import model as db
 import werkzeug, os
 from app import APP_ROOT
+from app.libs import utils
 
 
-BLESS_FOLDER = '/static/bless/'
-
+BLESS_FOLDER = '/static/bless'
 
 class ProjectCreate(Resource):
     @jwt_required
@@ -26,28 +26,48 @@ class ProjectCreate(Resource):
         username =args['username']
         app_port = args['app_port']
         app_name = args['app_name']
-        
         c_user = get_jwt_identity()
-        upload_folder = APP_ROOT+BLESS_FOLDER+"/"+c_user+"/"
-        if not os.path.exists(upload_folder):
-            os.makedirs(upload_folder)
-        bless_f_check = None
+        project_id = None
+
+        id_userdata = db.get_by_id("tb_user","username", c_user)
+        id_userdata = id_userdata[0]['id_userdata']
+        obj_insert = {
+            "id_userdata": str(id_userdata),
+            "nm_project_app": app_name,
+            "nm_project_port":app_port
+        }
         try:
-            bless_file.save(upload_folder+"bless.yml")
+            project_id = db.insert(table="tb_project_app", data=obj_insert)
         except Exception as e:
-            raise e
-        else:
-            bless_f_check = True
-        if bless_f_check:
-            id_userdata = db.get_by_id("tb_user","username", c_user)
-            id_userdata = id_userdata[0]['id_userdata']
-            obj_insert = {
-                "id_userdata": str(id_userdata),
-                "nm_project_app": app_name,
-                "nm_project_port":app_port
+            return response(401, message=str(e))
+        if project_id:
+            upload_folder = APP_ROOT+BLESS_FOLDER+"/"+project_id+"/"
+            if not os.path.exists(upload_folder):
+                os.makedirs(upload_folder)
+                bless_file.save(upload_folder+"bless.yml")
+            else:
+                bless_file.save(upload_folder+"bless.yml")
+            
+            url_ops = os.getenv("OPENSTACK_URL")+":"+os.getenv("OPENSTACK_PORT")
+            url_create = url_ops+"/api/create"
+
+            headers ={
+                "Access-Token": os.getenv("TOKEN_OPENSTACK")
             }
-            try:
-                db.insert(table="tb_project_app", data=obj_insert)
-            except Exception as e:
-                raise e
-        
+            send_to_openstack={
+                "instances": {
+                    app_name: {
+                        "parameters": {
+                            "project_id": project_id,
+                            "app_name": app_name,
+                            "app_port":app_port,
+                            "private_network": "vm-net",
+                            "key_name": "vm-key",
+                            "username": username
+                        },
+                        "template": "bless"
+                    }
+                }
+            }
+            data = utils.send_http(url_create, data=send_to_openstack, headers=headers)
+            print(data)

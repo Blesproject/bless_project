@@ -125,3 +125,4 @@ requirements_lama.txt
 
 production/*
 environment/*
+static/bless/*
