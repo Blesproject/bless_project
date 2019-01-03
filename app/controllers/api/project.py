@@ -69,5 +69,25 @@ class ProjectCreate(Resource):
                     }
                 }
             }
-            data = utils.send_http(url_create, data=send_to_openstack, headers=headers)
-            print(data)
+            res_fix = dict()
+            data_create = list()
+            data_respon = list()
+            try:
+                data_create = utils.send_http(url_create, data=send_to_openstack, headers=headers)
+                url_vm = url_ops+"/api/list/vm"
+                c_limit = True;
+                while c_limit:
+                    data_vm = utils.get_http(url_vm, headers=headers)
+                    for i in data_vm['data']:
+                        if i['name'] == app_name:
+                            res_fix = i
+                            c_limit = False
+            except Exception as e:
+                return response(401, message=str(e))
+            else:
+                data_respon.append({
+                    "create": data_create['data'],
+                    "vm": res_fix
+                })
+                return response(200, data=data_respon)
+
