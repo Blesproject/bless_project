@@ -72,9 +72,11 @@ class ProjectCreate(Resource):
             res_fix = dict()
             data_create = list()
             data_respon = list()
+            data_pemkey = ""
             try:
                 data_create = utils.send_http(url_create, data=send_to_openstack, headers=headers)
                 url_vm = url_ops+"/api/list/vm"
+                url_pemkey = url_ops+"/api/list/pemkey/"+app_name
                 c_limit = True;
                 while c_limit:
                     data_vm = utils.get_http(url_vm, headers=headers)
@@ -82,12 +84,14 @@ class ProjectCreate(Resource):
                         if i['name'] == app_name:
                             res_fix = i
                             c_limit = False
+                    data_pemkey = utils.get_http(url_pemkey, headers=headers)
             except Exception as e:
                 return response(401, message=str(e))
             else:
                 data_respon.append({
                     "create": data_create['data'],
-                    "vm": res_fix
+                    "vm": res_fix,
+                    "pemkey": data_pemkey
                 })
                 return response(200, data=data_respon)
 
