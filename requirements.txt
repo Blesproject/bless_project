@@ -64,7 +64,7 @@ socketIO-client==0.7.2
 tornado==5.1.1
 typed-ast==1.1.0
 uniqid==0.0.1
-urllib3==1.23
+urllib3==1.26.5
 vine==1.1.4
 websocket-client==0.54.0
 Werkzeug==0.14.1
